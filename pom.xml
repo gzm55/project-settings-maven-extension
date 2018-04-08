@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://mav en.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.github.gzm55.maven</groupId>
+  <artifactId>project-settings-extension</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <name>Extension for Loading project specific settings.xml</name>
+  <description>This extension could load .mvn/settings.xml
+  as project settings, and merge it into effective setting.</description>
+  <url>https://github.com/gzm55/project-settings-maven-extension</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>James Z.M. Gao</name>
+      <email>gaozm55@gmail.com</email>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/gzm55/project-settings-maven-extension.git</connection>
+    <developerConnection>scm:git:git@github.com:gzm55/project-settings-maven-extension.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/gzm55/project-settings-maven-extension/tree/master</url>
+  </scm>
+
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/gzm55/project-settings-maven-extension/issues</url>
+  </issueManagement>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- support Java 7 + maven [3.3.1, ) in runtime -->
+    <project.runtime-jdk.min-version>1.7</project.runtime-jdk.min-version>
+    <project.runtime-maven.min-version>3.3.1</project.runtime-maven.min-version>
+
+    <!-- requirement for build this extension -->
+    <project.buildtime-jdk.min-version>1.8</project.buildtime-jdk.min-version>
+    <project.buildtime-maven.min-version>3.5.3</project.buildtime-maven.min-version>
+
+    <!-- junit 5 versions -->
+    <junit.jupiter.version>5.1.0</junit.jupiter.version>
+    <junit.platform.version>1.1.0</junit.platform.version>
+
+    <maven.compiler.source>${project.runtime-jdk.min-version}</maven.compiler.source>
+    <maven.compiler.target>${project.runtime-jdk.min-version}</maven.compiler.target>
+    <maven.compiler.testSource>${project.buildtime-jdk.min-version}</maven.compiler.testSource>
+    <maven.compiler.testTarget>${project.buildtime-jdk.min-version}</maven.compiler.testTarget>
+
+    <sort.verifyFail>STOP</sort.verifyFail>
+  </properties>
+
+  <dependencies>
+    <!-- Uses only components provided by maven distro. -->
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <version>[${project.runtime-maven.min-version},)</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-compat</artifactId>
+      <version>[${project.runtime-maven.min-version},)</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.0.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>1.6</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0-M1</version>
+        <executions>
+          <execution>
+            <id>enforce-versions</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[${project.buildtime-maven.min-version},)</version>
+                </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>[${project.buildtime-jdk.min-version},)</version>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <!-- only support 2.19.1, see https://github.com/junit-team/junit5/issues/809 -->
+        <version>2.19.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-surefire-provider</artifactId>
+            <version>${junit.platform.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.jupiter.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>com.github.ekryd.sortpom</groupId>
+        <artifactId>sortpom-maven-plugin</artifactId>
+        <version>2.8.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <keepBlankLines>true</keepBlankLines>
+        </configuration>
+      </plugin>
+            <!-- workaround for https://issues.apache.org/jira/browse/MINVOKER-117 -->
+	    <!--
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.0.2</version>
+        <executions>
+          <execution>
+            <id>filter-it-xml</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/its/remote-parent/.mvn</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/src/it/remote-parent/resource</directory>
+                  <includes>
+                    <include>parent-repositories.xml</include>
+                  </includes>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-invoker-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>install</goal>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
+          <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
+          <cloneClean>false</cloneClean>
+        </configuration>
+      </plugin>
+      -->
+          <!-- workaround MINVOKER-117, not cleanup the filtered files -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.0.1</version>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>flatten.clean</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <flattenMode>ossrh</flattenMode>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>release-profile</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>gpg-2.1-profile</id>
+      <activation>
+        <property>
+          <name>!env.OLD_GPG</name>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <artifactId>maven-gpg-plugin</artifactId>
+              <configuration>
+                <gpgArguments>
+                  <arg>--pinentry-mode</arg>
+                  <arg>loopback</arg>
+                </gpgArguments>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+</project>
