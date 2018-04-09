@@ -2,52 +2,37 @@ package com.github.gzm55.maven.settings.building;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Named;
 import javax.inject.Inject;
 
-import org.apache.maven.AbstractMavenLifecycleParticipant;
-import org.apache.maven.MavenExecutionException;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.InvalidRepositoryException;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.execution.MavenExecutionRequest;
-import org.apache.maven.model.Repository;
-import org.apache.maven.project.ProjectBuildingHelper;
-import org.apache.maven.project.ProjectBuildingRequest;
-
+import org.apache.maven.building.FileSource;
 import org.apache.maven.settings.building.DefaultSettingsBuilder;
 import org.apache.maven.settings.building.DefaultSettingsProblem;
-import org.apache.maven.settings.building.SettingsBuildingResult;
-import org.apache.maven.settings.building.SettingsBuildingRequest;
 import org.apache.maven.settings.building.SettingsBuildingException;
-import org.apache.maven.settings.building.SettingsProblem;
+import org.apache.maven.settings.building.SettingsBuildingRequest;
+import org.apache.maven.settings.building.SettingsBuildingResult;
 import org.apache.maven.settings.building.SettingsProblemCollector;
-import org.apache.maven.building.FileSource;
-
-import java.io.StringReader;
-import java.io.StringWriter;
-
-//import org.apache.maven.building.Source;
-import org.apache.maven.settings.Settings;
-import org.apache.maven.settings.TrackableBase;
+import org.apache.maven.settings.building.SettingsProblem;
 import org.apache.maven.settings.io.SettingsParseException;
 import org.apache.maven.settings.io.SettingsReader;
 import org.apache.maven.settings.io.SettingsWriter;
 import org.apache.maven.settings.merge.MavenSettingsMerger;
 import org.apache.maven.settings.validation.SettingsValidator;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.TrackableBase;
 
 import org.codehaus.plexus.interpolation.EnvarBasedValueSource;
 import org.codehaus.plexus.interpolation.InterpolationException;
 import org.codehaus.plexus.interpolation.InterpolationPostProcessor;
 import org.codehaus.plexus.interpolation.PropertiesBasedValueSource;
 import org.codehaus.plexus.interpolation.RegexBasedInterpolator;
-
-
 import org.codehaus.plexus.logging.Logger;
 
 import static org.apache.maven.cli.MavenCli.MULTIMODULE_PROJECT_DIRECTORY;
@@ -80,11 +65,11 @@ public class ProjectSettingsBuilder extends DefaultSettingsBuilder {
   public SettingsBuildingResult build(final SettingsBuildingRequest request)
       throws SettingsBuildingException
   {
-    // logger.warn("override SettingBuilder");
-
     final SettingsBuildingResult superResult = super.build(request);
 
-    final String multiModuleProjectDirectory = System.getProperty(MULTIMODULE_PROJECT_DIRECTORY);
+    final String multiModuleProjectDirectory = null == request.getUserProperties() ?
+        null : request.getUserProperties().getProperty(MULTIMODULE_PROJECT_DIRECTORY);
+
     if (null == multiModuleProjectDirectory) {
       if (logger.isDebugEnabled()) {
         logger.debug("property " + MULTIMODULE_PROJECT_DIRECTORY +
@@ -213,7 +198,7 @@ public class ProjectSettingsBuilder extends DefaultSettingsBuilder {
 
     try {
       serializedSettings = interpolator.interpolate(serializedSettings, "settings");
-    } catch ( InterpolationException e ) {
+    } catch (final InterpolationException e) {
       problems.add(SettingsProblem.Severity.ERROR,
           "Failed to interpolate settings: " + e.getMessage(), -1, -1, e );
 
