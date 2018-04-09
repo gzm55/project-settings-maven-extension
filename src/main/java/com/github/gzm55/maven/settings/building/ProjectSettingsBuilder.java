@@ -96,6 +96,10 @@ public class ProjectSettingsBuilder extends DefaultSettingsBuilder {
     final File projectSettingsFile =
         new File(multiModuleProjectDirectory, PROJECT_SETTINGS_FILENAME);
 
+    if (!projectSettingsFile.exists()) {
+      return superResult;
+    }
+
     final List<SettingsProblem> problems = null == superResult.getProblems() ?
         new ArrayList<SettingsProblem>() : superResult.getProblems();
 
