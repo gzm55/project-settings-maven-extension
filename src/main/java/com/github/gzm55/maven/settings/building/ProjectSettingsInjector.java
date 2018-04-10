@@ -14,13 +14,7 @@ import javax.inject.Inject;
 import org.apache.maven.building.FileSource;
 import org.apache.maven.building.Source;
 import org.apache.maven.eventspy.AbstractEventSpy;
-import org.apache.maven.settings.building.DefaultSettingsProblem;
-import org.apache.maven.settings.building.SettingsBuildingException;
-import org.apache.maven.settings.building.SettingsBuildingRequest;
-import org.apache.maven.settings.building.SettingsBuildingResult;
-import org.apache.maven.settings.building.SettingsProblemCollector;
-import org.apache.maven.settings.building.SettingsProblem;
-import org.apache.maven.settings.building.StringSettingsSource;
+import org.apache.maven.settings.building.*;
 import org.apache.maven.settings.io.SettingsParseException;
 import org.apache.maven.settings.io.SettingsReader;
 import org.apache.maven.settings.io.SettingsWriter;
@@ -118,8 +112,8 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
       projectSettings.setUsePluginRegistry(false);
       projectSettings.setOffline(false);
 
-      request.setUserSettingsFile(null);
-      request.setUserSettingsSource(
+      request.setUserSettingsFile(null)
+             .setUserSettingsSource(
           writeSettings(projectSettings, "(memory:" + projectSettingsSource.getLocation()+")"));
     } else {
       final boolean injectAsUser = null != userSettingsSource;
@@ -135,12 +129,12 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
       settingsMerger.merge(projectSettings, injectSettings, sourceLvl);
 
       if (injectAsUser) {
-        request.setUserSettingsFile(null);
-        request.setUserSettingsSource(writeSettings(projectSettings,
+        request.setUserSettingsFile(null)
+               .setUserSettingsSource(writeSettings(projectSettings,
             "(memory:" + projectSettingsSource.getLocation()+":"+injectSource.getLocation() +")"));
       } else {
-        request.setGlobalSettingsFile(null);
-        request.setGlobalSettingsSource(writeSettings(projectSettings,
+        request.setGlobalSettingsFile(null)
+               .setGlobalSettingsSource(writeSettings(projectSettings,
             "(memory:" + projectSettingsSource.getLocation()+":"+injectSource.getLocation() +")"));
       }
     }
@@ -212,6 +206,7 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
     return settings;
   }
 
+  @SuppressWarnings("deprecation")
   private StringSettingsSource writeSettings(final Settings settings, final String location)
   {
     final StringWriter writer = new StringWriter(1024 * 4);
