@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/gzm55/project-settings-maven-extension.svg?branch=master)](https://travis-ci.org/gzm55/project-settings-maven-extension)
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.gzm55.maven/project-settings-extension.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.gzm55.maven%22%20a%3A%22project-settings-extension%22)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.gzm55.maven/project-settings-extension.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.gzm55.maven%22%20a%3A%22project-settings-extension%22)
 
 # project-settings-maven-extension
 
