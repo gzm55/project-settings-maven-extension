@@ -27,7 +27,7 @@ jobs:
     if: repo = gzm55/project-settings-maven-extension AND tag =~ ^project-settings-extension-[0-9]+(\.[0-9]+)+$
     before_script:
     - ./mvnw -B -q exec:exec -Dexec.executable=echo -Dexec.args='${project.version}' | grep -v -q -- '-SNAPSHOT$' || { echo "Skip SNAPSHOT commits"; travis_terminate 0; }
-    - openssl aes-256-cbc -K $encrypted__key -iv $encrypted__iv -in .cd/sign.asc.enc -d | gpg --batch --import
+    - openssl aes-256-cbc -K $encrypted_d3fff69b07aa_key -iv $encrypted_d3fff69b07aa_iv -in .cd/sign.asc.enc -d | gpg --batch --import
     script:
     - ./mvnw -B -DskipTests -Dinvoker.skip -gs .cd/settings.xml -P release-profile deploy
     before_cache:
