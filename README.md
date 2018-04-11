@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/gzm55/project-settings-maven-extension.svg?branch=master)](https://travis-ci.org/gzm55/project-settings-maven-extension)
+
 # project-settings-maven-extension
 
 This extension could load .mvn/settings.xml as project settings, and merge it into effective setting.
