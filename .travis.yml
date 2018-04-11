@@ -1,0 +1,35 @@
+language: java
+dist: trusty
+
+jdk:
+- oraclejdk8
+- oraclejdk9
+
+cache:
+  directories:
+  - "$HOME/.m2"
+
+install: skip
+
+script:
+- ./mvnw -B clean install
+
+jobs:
+  include:
+  - stage: deploy
+    jdk: oraclejdk8
+    if: repo = gzm55/project-settings-maven-extension AND branch = master AND type != pull_request
+    before_script:
+    - ./mvnw -B -q exec:exec -Dexec.executable=echo -Dexec.args='${project.version}' | grep -q -- '-SNAPSHOT$' || { echo "Skip non SNAPSHOT commits"; travis_terminate 0; }
+    script: ./mvnw -B -DskipTests -Dinvoker.skip -gs .cd/settings.xml deploy
+  - stage: deploy
+    jdk: oraclejdk8
+    if: repo = gzm55/project-settings-maven-extension AND tag =~ ^project-settings-extension-[0-9]+(\.[0-9]+)+$
+    before_script:
+    - ./mvnw -B -q exec:exec -Dexec.executable=echo -Dexec.args='${project.version}' | grep -v -q -- '-SNAPSHOT$' || { echo "Skip SNAPSHOT commits"; travis_terminate 0; }
+    - : openssl aes-256-cbc -K $encrypted__key -iv $encrypted__iv -in .cd/sign.asc.enc -d | gpg --batch --import
+    script:
+    - ./mvnw -B -DskipTests -Dinvoker.skip -gs .cd/settings.xml -P release-profile deploy
+    before_cache:
+    - gpg --batch --yes --delete-secret-keys $GPG_KEYID
+    - gpg --batch --yes --delete-keys $GPG_KEYID
