@@ -1,5 +1,25 @@
 package com.github.gzm55.maven.settings.building;
 
+import org.apache.maven.building.FileSource;
+import org.apache.maven.building.Source;
+import org.apache.maven.cli.MavenCli;
+import org.apache.maven.eventspy.AbstractEventSpy;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.TrackableBase;
+import org.apache.maven.settings.building.DefaultSettingsProblem;
+import org.apache.maven.settings.building.SettingsBuildingException;
+import org.apache.maven.settings.building.SettingsBuildingRequest;
+import org.apache.maven.settings.building.SettingsBuildingResult;
+import org.apache.maven.settings.building.SettingsProblem;
+import org.apache.maven.settings.building.SettingsProblemCollector;
+import org.apache.maven.settings.io.SettingsParseException;
+import org.apache.maven.settings.io.SettingsReader;
+import org.apache.maven.settings.io.SettingsWriter;
+import org.apache.maven.settings.merge.MavenSettingsMerger;
+import org.apache.maven.settings.validation.SettingsValidator;
+
+import org.codehaus.plexus.logging.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -7,25 +27,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.inject.Named;
 import javax.inject.Inject;
-
-import org.apache.maven.building.FileSource;
-import org.apache.maven.building.Source;
-import org.apache.maven.eventspy.AbstractEventSpy;
-import org.apache.maven.settings.building.*;
-import org.apache.maven.settings.io.SettingsParseException;
-import org.apache.maven.settings.io.SettingsReader;
-import org.apache.maven.settings.io.SettingsWriter;
-import org.apache.maven.settings.merge.MavenSettingsMerger;
-import org.apache.maven.settings.validation.SettingsValidator;
-import org.apache.maven.settings.Settings;
-import org.apache.maven.settings.TrackableBase;
-
-import org.codehaus.plexus.logging.Logger;
-
-import static org.apache.maven.cli.MavenCli.MULTIMODULE_PROJECT_DIRECTORY;
+import javax.inject.Named;
 
 
 /**
@@ -56,9 +59,7 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   private static final Settings TEMPLATE_SETTINGS = new Settings();
 
   @Override
-  public void onEvent(final Object event)
-      throws SettingsBuildingException
-  {
+  public void onEvent(final Object event) throws SettingsBuildingException {
     if (event instanceof SettingsBuildingResult && null != injectingProblems) {
       // Assuming the SettingsBuilding{Request,Result} events will be dispatched in paired order.
       ((SettingsBuildingResult)event).getProblems().addAll(injectingProblems);
@@ -73,13 +74,13 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
     // TODO skip property flag
 
-    final String multiModuleProjectDirectory = null == request.getSystemProperties() ?
-        null : request.getSystemProperties().getProperty(MULTIMODULE_PROJECT_DIRECTORY);
+    final String multiModuleProjectDirectory = null == request.getSystemProperties()
+        ? null : request.getSystemProperties().getProperty(MavenCli.MULTIMODULE_PROJECT_DIRECTORY);
 
     if (null == multiModuleProjectDirectory) {
       if (logger.isDebugEnabled()) {
-        logger.debug("property " + MULTIMODULE_PROJECT_DIRECTORY +
-            " is not set while searching project settings.xml.");
+        logger.debug("property " + MavenCli.MULTIMODULE_PROJECT_DIRECTORY
+            + " is not set while searching project settings.xml.");
       }
       return;
     }
@@ -116,7 +117,7 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
       request.setUserSettingsFile(null)
              .setUserSettingsSource(
-          writeSettings(projectSettings, "(memory:" + projectSettingsSource.getLocation()+")"));
+          writeSettings(projectSettings, "(memory:" + projectSettingsSource.getLocation() + ")"));
     } else {
       final boolean injectAsUser = null != userSettingsSource;
       final String sourceLvl = injectAsUser ? TrackableBase.USER_LEVEL : TrackableBase.GLOBAL_LEVEL;
@@ -133,11 +134,13 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
       if (injectAsUser) {
         request.setUserSettingsFile(null)
                .setUserSettingsSource(writeSettings(projectSettings,
-            "(memory:" + projectSettingsSource.getLocation()+":"+injectSource.getLocation() +")"));
+            "(memory:" + projectSettingsSource.getLocation()
+            + ":" + injectSource.getLocation() + ")"));
       } else {
         request.setGlobalSettingsFile(null)
                .setGlobalSettingsSource(writeSettings(projectSettings,
-            "(memory:" + projectSettingsSource.getLocation()+":"+injectSource.getLocation() +")"));
+            "(memory:" + projectSettingsSource.getLocation()
+            + ":" + injectSource.getLocation() + ")"));
       }
     }
 
@@ -151,8 +154,7 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
     injectingProblems = problems.isEmpty() ? null : problems;
   }
 
-  private Source getSettingsSource(final File settingsFile, final Source settingsSource)
-  {
+  private Source getSettingsSource(final File settingsFile, final Source settingsSource) {
     if (null != settingsSource) {
       return settingsSource;
     } else if (null != settingsFile && settingsFile.exists()) {
@@ -161,23 +163,20 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
     return null;
   }
 
-  private Settings readSettings(final Source settingsSource, final List<SettingsProblem> problems)
-  {
-    final SettingsProblemCollector problemsAdder = new SettingsProblemCollector()
-        {
-          @Override
-          public void add(final SettingsProblem.Severity severity,
-              final String message, int line, int col, final Exception cause)
-          {
-            if (line <= 0 && col <= 0 && cause instanceof SettingsParseException) {
-              final SettingsParseException e = (SettingsParseException)cause;
-              line = e.getLineNumber();
-              col = e.getColumnNumber();
-            }
-            problems.add(new DefaultSettingsProblem(message,
-                severity, settingsSource.getLocation(), line, col, cause));
+  private Settings readSettings(final Source settingsSource, final List<SettingsProblem> problems) {
+    final SettingsProblemCollector problemsAdder = new SettingsProblemCollector() {
+        @Override
+        public void add(final SettingsProblem.Severity severity,
+            final String message, int line, int col, final Exception cause) {
+          if (line <= 0 && col <= 0 && cause instanceof SettingsParseException) {
+            final SettingsParseException e = (SettingsParseException)cause;
+            line = e.getLineNumber();
+            col = e.getColumnNumber();
           }
-        };
+          problems.add(new DefaultSettingsProblem(message,
+              severity, settingsSource.getLocation(), line, col, cause));
+        }
+      };
 
     Settings settings;
 
@@ -186,20 +185,20 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
       try {
         settings = settingsReader.read(settingsSource.getInputStream(), options);
-      } catch (final SettingsParseException e) {
+      } catch (final SettingsParseException err) {
         options = Collections.singletonMap( SettingsReader.IS_STRICT, Boolean.FALSE );
         settings = settingsReader.read(settingsSource.getInputStream(), options);
-        problemsAdder.add(SettingsProblem.Severity.WARNING, e.getMessage(), 0, 0, e);
+        problemsAdder.add(SettingsProblem.Severity.WARNING, err.getMessage(), 0, 0, err);
       }
-    } catch (final SettingsParseException e) {
+    } catch (final SettingsParseException err) {
       problemsAdder.add(SettingsProblem.Severity.FATAL,
-          "Non-parseable settings " + settingsSource.getLocation() + ": " + e.getMessage(),
-          0, 0, e);
+          "Non-parseable settings " + settingsSource.getLocation() + ": " + err.getMessage(),
+          0, 0, err);
       return new Settings();
-    } catch (final IOException e) {
+    } catch (final IOException err) {
       problemsAdder.add(SettingsProblem.Severity.FATAL,
-          "Non-readable settings " + settingsSource.getLocation() + ": " + e.getMessage(),
-          -1, -1, e);
+          "Non-readable settings " + settingsSource.getLocation() + ": " + err.getMessage(),
+          -1, -1, err);
       return new Settings();
     }
 
@@ -209,15 +208,16 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   }
 
   @SuppressWarnings("deprecation")
-  private StringSettingsSource writeSettings(final Settings settings, final String location)
-  {
+  private org.apache.maven.settings.building.StringSettingsSource writeSettings(
+      final Settings settings, final String location) {
     final StringWriter writer = new StringWriter(1024 * 4);
 
     try {
       settingsWriter.write(writer, null, settings);
-      return new StringSettingsSource(writer.toString(), location);
-    } catch (final IOException e) {
-      throw new IllegalStateException("Failed to serialize settings to memory", e);
+      return new org.apache.maven.settings.building.StringSettingsSource(
+          writer.toString(), location);
+    } catch (final IOException err) {
+      throw new IllegalStateException("Failed to serialize settings to memory", err);
     }
   }
 }
