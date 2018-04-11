@@ -1,0 +1,16 @@
+<settings>
+  <profiles>
+    <profile>
+      <id>remote-parent-repo-profile</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <id>test-remote-repo</id>
+          <url>file://@project.build.directory@/its/remote-parent/repo</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+</settings>

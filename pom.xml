@@ -172,13 +172,12 @@
           <keepBlankLines>true</keepBlankLines>
         </configuration>
       </plugin>
-            <!-- workaround for https://issues.apache.org/jira/browse/MINVOKER-117 -->
-	    <!--
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.0.2</version>
         <executions>
           <execution>
+            <!-- workaround for https://issues.apache.org/jira/browse/MINVOKER-117 -->
             <id>filter-it-xml</id>
             <phase>pre-integration-test</phase>
             <goals>
@@ -190,7 +189,7 @@
                 <resource>
                   <directory>${project.basedir}/src/it/remote-parent/resource</directory>
                   <includes>
-                    <include>parent-repositories.xml</include>
+                    <include>settings.xml</include>
                   </includes>
                   <filtering>true</filtering>
                 </resource>
@@ -214,11 +213,10 @@
         <configuration>
           <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
           <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
+          <!-- workaround MINVOKER-117, not cleanup the filtered files -->
           <cloneClean>false</cloneClean>
         </configuration>
       </plugin>
-      -->
-          <!-- workaround MINVOKER-117, not cleanup the filtered files -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>

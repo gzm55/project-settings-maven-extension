@@ -1,0 +1,10 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>fake-group</groupId>
+    <artifactId>parent</artifactId>
+    <version>1-SNAPSHOT</version>
+  </parent>
+  <artifactId>fake-id</artifactId>
+  <packaging>pom</packaging>
+</project>
