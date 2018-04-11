@@ -53,6 +53,8 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
   private List<SettingsProblem> injectingProblems;
 
+  private static final Settings TEMPLATE_SETTINGS = new Settings();
+
   @Override
   public void onEvent(final Object event)
       throws SettingsBuildingException
@@ -107,10 +109,10 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
     if (null == injectSource) {
       // always ignore some fields in project settings
-      projectSettings.setLocalRepository(null);
-      projectSettings.setInteractiveMode(true);
-      projectSettings.setUsePluginRegistry(false);
-      projectSettings.setOffline(false);
+      projectSettings.setLocalRepository(TEMPLATE_SETTINGS.getLocalRepository());
+      projectSettings.setInteractiveMode(TEMPLATE_SETTINGS.isInteractiveMode());
+      projectSettings.setUsePluginRegistry(TEMPLATE_SETTINGS.isUsePluginRegistry());
+      projectSettings.setOffline(TEMPLATE_SETTINGS.isOffline());
 
       request.setUserSettingsFile(null)
              .setUserSettingsSource(

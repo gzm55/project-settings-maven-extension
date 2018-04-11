@@ -1,55 +1,26 @@
 package com.github.gzm55.maven.settings.building;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import org.apache.maven.eventspy.EventSpy;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.building.*;
+import org.apache.maven.settings.io.SettingsReader;
+import org.apache.maven.settings.building.SettingsBuildingException;
 
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.ContainerConfiguration;
 
-import org.apache.maven.AbstractMavenLifecycleParticipant;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.execution.MavenExecutionRequest;
-import org.apache.maven.execution.DefaultMavenExecutionRequest;
-import org.apache.maven.bridge.MavenRepositorySystem;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.github.gzm55.sisu.plexus.PlexusJUnit5TestCase;
 
-
 import static org.apache.maven.cli.MavenCli.MULTIMODULE_PROJECT_DIRECTORY;
-
-
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Named;
-import javax.inject.Inject;
-
-import org.apache.maven.building.FileSource;
-import org.apache.maven.building.Source;
-import org.apache.maven.eventspy.AbstractEventSpy;
-import org.apache.maven.eventspy.EventSpy;
-import org.apache.maven.settings.building.*;
-import org.apache.maven.settings.io.SettingsParseException;
-import org.apache.maven.settings.io.SettingsReader;
-import org.apache.maven.settings.io.SettingsWriter;
-import org.apache.maven.settings.merge.MavenSettingsMerger;
-import org.apache.maven.settings.validation.SettingsValidator;
-import org.apache.maven.settings.Settings;
-import org.apache.maven.settings.TrackableBase;
-
-
-
 
 
 /**
@@ -88,6 +59,119 @@ public class ProjectSettingsInjectorTest extends PlexusJUnit5TestCase
   }
 
   @Test
+  void testInjectInvalidXml() throws Exception {
+    Properties sysProps = new Properties();
+    sysProps.setProperty(MULTIMODULE_PROJECT_DIRECTORY, getClass().getClassLoader().getResource("invalid-xml").getFile());
+
+    final SettingsBuildingRequest request = new DefaultSettingsBuildingRequest().setSystemProperties(sysProps);
+    assertThrows(SettingsBuildingException.class, () -> lookup(EventSpy.class, "project-settings").onEvent(request));
+
+    sysProps.setProperty(MULTIMODULE_PROJECT_DIRECTORY, getClass().getClassLoader().getResource("empty-settings").getFile());
+    assertThrows(SettingsBuildingException.class, () -> lookup(EventSpy.class, "project-settings").onEvent(request));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void testInjectWithoutBoth() throws Exception {
+    Properties sysProps = new Properties();
+    sysProps.setProperty(MULTIMODULE_PROJECT_DIRECTORY, getClass().getClassLoader().getResource("normal-empty").getFile());
+    SettingsBuildingRequest request = new DefaultSettingsBuildingRequest().setSystemProperties(sysProps);
+
+    assertNull(request.getUserSettingsFile());
+    assertNull(request.getUserSettingsSource());
+    assertNull(request.getGlobalSettingsFile());
+    assertNull(request.getGlobalSettingsSource());
+
+    lookup(EventSpy.class, "project-settings").onEvent(request);
+
+    assertNull(request.getUserSettingsFile());
+    assertNotNull(request.getUserSettingsSource());
+    assertTrue(request.getUserSettingsSource() instanceof StringSettingsSource);
+    assertNull(request.getGlobalSettingsFile());
+    assertNull(request.getGlobalSettingsSource());
+
+    Map<String, ?> options = Collections.singletonMap(SettingsReader.IS_STRICT, Boolean.FALSE);
+    Settings settings = lookup(SettingsReader.class).read(request.getUserSettingsSource().getInputStream(), options);
+    assertEquals(new Settings().getLocalRepository(), settings.getLocalRepository());
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
   void testInjectUser() throws Exception {
+    Properties sysProps = new Properties();
+    sysProps.setProperty(MULTIMODULE_PROJECT_DIRECTORY, getClass().getClassLoader().getResource("normal").getFile());
+    SettingsBuildingRequest request = new DefaultSettingsBuildingRequest()
+        .setSystemProperties(sysProps)
+        .setUserSettingsSource(new StringSettingsSource("<settings><localRepository>user-defined</localRepository></settings>"));
+
+    lookup(EventSpy.class, "project-settings").onEvent(request);
+
+    assertNull(request.getUserSettingsFile());
+    assertNotNull(request.getUserSettingsSource());
+    assertTrue(request.getUserSettingsSource() instanceof StringSettingsSource);
+    assertNull(request.getGlobalSettingsFile());
+    assertNull(request.getGlobalSettingsSource());
+
+    Map<String, ?> options = Collections.singletonMap(SettingsReader.IS_STRICT, Boolean.FALSE);
+    Settings settings = lookup(SettingsReader.class).read(request.getUserSettingsSource().getInputStream(), options);
+
+    assertEquals("user-defined", settings.getLocalRepository());
+    assertEquals(1, settings.getMirrors().size());
+    assertEquals("UK", settings.getMirrors().get(0).getId());
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void testInjectGlobal() throws Exception {
+    Properties sysProps = new Properties();
+    sysProps.setProperty(MULTIMODULE_PROJECT_DIRECTORY, getClass().getClassLoader().getResource("normal").getFile());
+    SettingsBuildingRequest request = new DefaultSettingsBuildingRequest()
+        .setSystemProperties(sysProps)
+        .setGlobalSettingsSource(new StringSettingsSource("<settings><localRepository>global-defined</localRepository></settings>"));
+
+    lookup(EventSpy.class, "project-settings").onEvent(request);
+
+    assertNull(request.getUserSettingsFile());
+    assertNull(request.getUserSettingsSource());
+    assertNull(request.getGlobalSettingsFile());
+    assertNotNull(request.getGlobalSettingsSource());
+    assertTrue(request.getGlobalSettingsSource() instanceof StringSettingsSource);
+
+    Map<String, ?> options = Collections.singletonMap(SettingsReader.IS_STRICT, Boolean.FALSE);
+    Settings settings = lookup(SettingsReader.class).read(request.getGlobalSettingsSource().getInputStream(), options);
+
+    assertEquals("global-defined", settings.getLocalRepository());
+    assertEquals(1, settings.getMirrors().size());
+    assertEquals("UK", settings.getMirrors().get(0).getId());
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void testInjectBoth() throws Exception {
+    String userSettings = "<settings><localRepository>user-defined</localRepository><mirrors><mirror><id>um</id><url>u</url><mirrorOf>central</mirrorOf></mirror></mirrors></settings>";
+    String globalSettings = "<settings><localRepository>global-defined</localRepository><mirrors><mirror><id>gm</id><url>u</url><mirrorOf>central</mirrorOf></mirror></mirrors></settings>";
+    Properties sysProps = new Properties();
+    sysProps.setProperty(MULTIMODULE_PROJECT_DIRECTORY, getClass().getClassLoader().getResource("normal").getFile());
+    SettingsBuildingRequest request = new DefaultSettingsBuildingRequest()
+        .setSystemProperties(sysProps)
+        .setUserSettingsSource(new StringSettingsSource(userSettings))
+        .setGlobalSettingsSource(new StringSettingsSource(globalSettings));
+
+    lookup(EventSpy.class, "project-settings").onEvent(request);
+
+    assertNull(request.getUserSettingsFile());
+    assertNotNull(request.getUserSettingsSource());
+    assertTrue(request.getUserSettingsSource() instanceof StringSettingsSource);
+    assertNull(request.getGlobalSettingsFile());
+    assertTrue(request.getGlobalSettingsSource() instanceof StringSettingsSource);
+    assertEquals(globalSettings, ((StringSettingsSource)request.getGlobalSettingsSource()).getContent());
+
+    Map<String, ?> options = Collections.singletonMap(SettingsReader.IS_STRICT, Boolean.FALSE);
+    Settings settings = lookup(SettingsReader.class).read(request.getUserSettingsSource().getInputStream(), options);
+
+    assertEquals("user-defined", settings.getLocalRepository());
+    assertEquals(2, settings.getMirrors().size());
+    assertEquals("UK", settings.getMirrors().get(0).getId());
+    assertEquals("um", settings.getMirrors().get(1).getId());
   }
 }
