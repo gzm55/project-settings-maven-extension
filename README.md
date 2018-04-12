@@ -41,4 +41,4 @@ Some fields should be controlled only be user, not project, they are always igno
 
 ## Known issue
 
-Project settings can not bootstrap loading core extensions.
+Project settings can not bootstrap loading core extensions. See [MNG-6392](https://issues.apache.org/jira/browse/MNG-6392).
