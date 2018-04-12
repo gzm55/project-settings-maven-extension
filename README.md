@@ -24,7 +24,7 @@ Since Maven 3.3.1, we have another way to cooperate with maven, that is core ext
 
 ## Merge Order
 
-* project level `${maven.multiModuleProjectDirectory}/.mvn/settings` (Highest priority)
+* project level `${maven.multiModuleProjectDirectory}/.mvn/settings.xml` (Highest priority)
 * user level `${user.home}/.m2/settings.xml` (Medium priority)
 * global level `${maven.home}/conf/settings.xml` (Low priority)
 
