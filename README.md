@@ -1,9 +1,9 @@
 [![Build Status](https://travis-ci.org/gzm55/project-settings-maven-extension.svg?branch=master)](https://travis-ci.org/gzm55/project-settings-maven-extension)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.gzm55.maven/project-settings-extension.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.gzm55.maven%22%20a%3A%22project-settings-extension%22)
 
-# project-settings-maven-extension
+# project-settings-extension
 
-This extension could load .mvn/settings.xml as project settings, and merge it into effective setting.
+This maven extension could load .mvn/settings.xml as project settings, and merge it into effective setting.
 
 Maven originally only takes two configurations, user (`${user.home}/.m2/settings.xml`) and global (`${maven.home}/conf/settings.xml`). When we developing multiply projects from multiply organizations, the configurations may conflict, and are hard to manage (edit manually or some switch scripts). Another problem is when using some corp maven repositories or mirros for bootstraping the team common parent poms or plugins, the developers have to do some setup actions. But the projects should be `./mvnw verify`-ed immediately after the code is fully checked out.
 
