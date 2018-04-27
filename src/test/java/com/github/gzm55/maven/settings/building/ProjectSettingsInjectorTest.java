@@ -174,4 +174,31 @@ public class ProjectSettingsInjectorTest extends PlexusJUnit5TestCase
     assertEquals("UK", settings.getMirrors().get(0).getId());
     assertEquals("um", settings.getMirrors().get(1).getId());
   }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void testSkipInject() throws Exception {
+    Properties sysProps = new Properties();
+    sysProps.setProperty(MULTIMODULE_PROJECT_DIRECTORY, getClass().getClassLoader().getResource("normal").getFile());
+    SettingsBuildingRequest request = new DefaultSettingsBuildingRequest()
+        .setSystemProperties(sysProps);
+
+    lookup(EventSpy.class, "project-settings").onEvent(request);
+    Map<String, ?> options = Collections.singletonMap(SettingsReader.IS_STRICT, Boolean.FALSE);
+    Settings settings = lookup(SettingsReader.class).read(request.getUserSettingsSource().getInputStream(), options);
+
+    assertEquals(1, settings.getMirrors().size());
+    assertEquals("UK", settings.getMirrors().get(0).getId());
+
+    // add skip property
+    Properties userProps = new Properties();
+    userProps.setProperty(ProjectSettingsInjector.PROJECT_SETTINGS_SKIP_KEY, "true");
+    request.setUserProperties(userProps).setUserSettingsSource(null);
+
+    lookup(EventSpy.class, "project-settings").onEvent(request);
+    assertNull(request.getUserSettingsFile());
+    assertNull(request.getUserSettingsSource());
+    assertNull(request.getGlobalSettingsFile());
+    assertNull(request.getGlobalSettingsSource());
+  }
 }

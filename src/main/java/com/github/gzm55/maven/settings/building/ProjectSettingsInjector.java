@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -54,10 +55,9 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   private ProjectSettingsMerger settingsMerger = new ProjectSettingsMerger();
 
   private static final String PROJECT_SETTINGS_FILENAME = ".mvn/settings.xml";
+  public static final String PROJECT_SETTINGS_SKIP_KEY = "skipProjectSettings";
 
   private List<SettingsProblem> injectingProblems;
-
-  private static final Settings TEMPLATE_SETTINGS = new Settings();
 
   @Override
   public void onEvent(final Object event) throws SettingsBuildingException {
@@ -73,10 +73,15 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
     final SettingsBuildingRequest request = (SettingsBuildingRequest)event;
 
-    // TODO skip property flag
+    if (Boolean.parseBoolean(getProperty(request, PROJECT_SETTINGS_SKIP_KEY, "false"))) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Skip loading project settings.");
+      }
+      return;
+    }
 
-    final String multiModuleProjectDirectory = null == request.getSystemProperties()
-        ? null : request.getSystemProperties().getProperty(MavenCli.MULTIMODULE_PROJECT_DIRECTORY);
+    final String multiModuleProjectDirectory =
+        getProperty(request.getSystemProperties(), MavenCli.MULTIMODULE_PROJECT_DIRECTORY);
 
     if (null == multiModuleProjectDirectory) {
       if (logger.isDebugEnabled()) {
@@ -206,5 +211,23 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
     } catch (final IOException err) {
       throw new IllegalStateException("Failed to serialize settings to memory", err);
     }
+  }
+
+  private String getProperty(final Properties fromProperties, final String key) {
+    return getProperty(fromProperties, key, null);
+  }
+
+  private String getProperty(final Properties fromProperties, final String key, final String def) {
+    return null == fromProperties ? null : fromProperties.getProperty(key, def);
+  }
+
+  private String getProperty(final SettingsBuildingRequest fromRequest, final String key) {
+    return getProperty(fromRequest, key, null);
+  }
+
+  private String getProperty(final SettingsBuildingRequest fromRequest,
+      final String key, final String def) {
+    String val = getProperty(fromRequest.getUserProperties(), key);
+    return null != val ? val : getProperty(fromRequest.getSystemProperties(), key, def);
   }
 }
