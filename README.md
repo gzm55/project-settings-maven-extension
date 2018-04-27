@@ -17,7 +17,7 @@ Since Maven 3.3.1, we have another way to cooperate with maven, that is core ext
   <extension>
     <groupId>com.github.gzm55.maven</groupId>
     <artifactId>project-settings-extension</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
   </extension>
 </extensions>
 ```
@@ -32,12 +32,16 @@ This order is widely used in many projects such as git.
 
 ## Special fields in projects settings
 
-Some fields should be controlled only be user, not project, they are always ignored:
+`servers.server[].configuration` will be merged deeply, and prefer ones in project settings.
+
+Some fields should be controlled only by the user, not any project, so they are always ignored and copied back from user or global level settings:
 
 * localRepository
 * interactiveMode
 * offline
 * usePluginRegistry
+* proxies
+* servers.server[].{username,password,privateKey,passphrase,filePermissions,directoryPermissions}
 
 ## Known issue
 
