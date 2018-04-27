@@ -1,5 +1,7 @@
 package com.github.gzm55.maven.settings.building;
 
+import com.github.gzm55.maven.settings.merge.ProjectSettingsMerger;
+
 import org.apache.maven.building.FileSource;
 import org.apache.maven.building.Source;
 import org.apache.maven.cli.MavenCli;
@@ -15,7 +17,6 @@ import org.apache.maven.settings.building.SettingsProblemCollector;
 import org.apache.maven.settings.io.SettingsParseException;
 import org.apache.maven.settings.io.SettingsReader;
 import org.apache.maven.settings.io.SettingsWriter;
-import org.apache.maven.settings.merge.MavenSettingsMerger;
 import org.apache.maven.settings.validation.SettingsValidator;
 
 import org.codehaus.plexus.logging.Logger;
@@ -50,7 +51,7 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   @Inject
   private SettingsValidator settingsValidator;
 
-  private MavenSettingsMerger settingsMerger = new MavenSettingsMerger();
+  private ProjectSettingsMerger settingsMerger = new ProjectSettingsMerger();
 
   private static final String PROJECT_SETTINGS_FILENAME = ".mvn/settings.xml";
 
@@ -62,7 +63,7 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   public void onEvent(final Object event) throws SettingsBuildingException {
     if (event instanceof SettingsBuildingResult && null != injectingProblems) {
       // Assuming the SettingsBuilding{Request,Result} events will be dispatched in paired order.
-      ((SettingsBuildingResult)event).getProblems().addAll(injectingProblems);
+      ((SettingsBuildingResult)event).getProblems().addAll(0, injectingProblems);
       injectingProblems = null;
       return;
     } else if (!(event instanceof SettingsBuildingRequest)) {
@@ -108,40 +109,22 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
     final Source injectSource =
         null != userSettingsSource ? userSettingsSource : globalSettingsSource;
 
-    if (null == injectSource) {
-      // always ignore some fields in project settings
-      projectSettings.setLocalRepository(TEMPLATE_SETTINGS.getLocalRepository());
-      projectSettings.setInteractiveMode(TEMPLATE_SETTINGS.isInteractiveMode());
-      projectSettings.setUsePluginRegistry(TEMPLATE_SETTINGS.isUsePluginRegistry());
-      projectSettings.setOffline(TEMPLATE_SETTINGS.isOffline());
+    final Settings injectSettings = readSettings(injectSource, problems);
+    settingsMerger.merge(projectSettings, injectSettings, TrackableBase.USER_LEVEL);
 
+    @SuppressWarnings("deprecation")
+    final org.apache.maven.settings.building.SettingsSource resultSource =
+        writeSettings(projectSettings,
+          "memory(:" + projectSettingsSource.getLocation()
+          + (null == injectSource ? "" : ":" + injectSource.getLocation())
+          + ")");
+
+    if (null == injectSource || null != userSettingsSource) {
       request.setUserSettingsFile(null)
-             .setUserSettingsSource(
-          writeSettings(projectSettings, "(memory:" + projectSettingsSource.getLocation() + ")"));
+             .setUserSettingsSource(resultSource);
     } else {
-      final boolean injectAsUser = null != userSettingsSource;
-      final String sourceLvl = injectAsUser ? TrackableBase.USER_LEVEL : TrackableBase.GLOBAL_LEVEL;
-      final Settings injectSettings = readSettings(injectSource, problems);
-
-      // always ignore some fields in project settings
-      projectSettings.setLocalRepository(injectSettings.getLocalRepository());
-      projectSettings.setInteractiveMode(injectSettings.isInteractiveMode());
-      projectSettings.setUsePluginRegistry(injectSettings.isUsePluginRegistry());
-      projectSettings.setOffline(injectSettings.isOffline());
-
-      settingsMerger.merge(projectSettings, injectSettings, sourceLvl);
-
-      if (injectAsUser) {
-        request.setUserSettingsFile(null)
-               .setUserSettingsSource(writeSettings(projectSettings,
-            "(memory:" + projectSettingsSource.getLocation()
-            + ":" + injectSource.getLocation() + ")"));
-      } else {
-        request.setGlobalSettingsFile(null)
-               .setGlobalSettingsSource(writeSettings(projectSettings,
-            "(memory:" + projectSettingsSource.getLocation()
-            + ":" + injectSource.getLocation() + ")"));
-      }
+      request.setGlobalSettingsFile(null)
+             .setGlobalSettingsSource(resultSource);
     }
 
     for (final SettingsProblem problem : problems) {
@@ -164,6 +147,10 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   }
 
   private Settings readSettings(final Source settingsSource, final List<SettingsProblem> problems) {
+    if ( settingsSource == null ) {
+      return new Settings();
+    }
+
     final SettingsProblemCollector problemsAdder = new SettingsProblemCollector() {
         @Override
         public void add(final SettingsProblem.Severity severity,
