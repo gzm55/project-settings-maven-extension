@@ -17,7 +17,7 @@ Since Maven 3.3.1, we have another way to cooperate with maven, that is core ext
   <extension>
     <groupId>com.github.gzm55.maven</groupId>
     <artifactId>project-settings-extension</artifactId>
-    <version>0.0.2</version>
+    <version>0.1.0</version>
   </extension>
 </extensions>
 ```
@@ -42,6 +42,10 @@ Some fields should be controlled only by the user, not any project, so they are 
 * usePluginRegistry
 * proxies
 * servers.server[].{username,password,privateKey,passphrase,filePermissions,directoryPermissions}
+
+## Property switch
+
+`skipProjectSettings`, a boolean property to skip loading the project settings.
 
 ## Known issue
 
