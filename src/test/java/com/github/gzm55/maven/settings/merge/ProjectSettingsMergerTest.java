@@ -88,10 +88,9 @@ public class ProjectSettingsMergerTest extends PlexusJUnit5TestCase
     assertEquals("u-user", serverUK.getUsername());
 
     final Xpp3Dom conf = (Xpp3Dom)serverUK.getConfiguration();
-    assertEquals(3, conf.getChildCount());
+    assertEquals(2, conf.getChildCount());
     assertEquals("pUK111", conf.getChild("v1").getValue());
     assertEquals("pUK222", conf.getChild("v2").getValue());
-    assertEquals("uUK333", conf.getChild("v3").getValue());
   }
 
   Settings settingsFromString(final String settingsString) throws Exception {

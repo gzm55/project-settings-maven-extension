@@ -5,8 +5,6 @@ import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.merge.MavenSettingsMerger;
 
-import org.codehaus.plexus.util.xml.Xpp3Dom;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +52,8 @@ public class ProjectSettingsMerger extends MavenSettingsMerger {
       if (serverById.containsKey(server.getId())) {
         final Server dominantServer = serverById.get(server.getId());
 
+	dominantServer.setSourceLevel(recessiveSourceLevel);
+
         // prefer user level fields for local only infos
         dominantServer.setUsername(server.getUsername());
         dominantServer.setPassword(server.getPassword());
@@ -61,18 +61,8 @@ public class ProjectSettingsMerger extends MavenSettingsMerger {
         dominantServer.setPassphrase(server.getPassphrase());
         dominantServer.setFilePermissions(server.getFilePermissions());
         dominantServer.setDirectoryPermissions(server.getDirectoryPermissions());
-
-        // merge configuration
-        final Xpp3Dom mergedConf = Xpp3Dom.mergeXpp3Dom((Xpp3Dom)dominantServer.getConfiguration(),
-            (Xpp3Dom)server.getConfiguration());
-        dominantServer.setConfiguration(mergedConf);
-      } else {
-        dominant.getServers().add(server);
       }
     }
-
-    recessive.setServers(dominant.getServers());
-    dominant.setServers(new ArrayList<Server>());
 
     super.merge(dominant, recessive, recessiveSourceLevel);
   }
