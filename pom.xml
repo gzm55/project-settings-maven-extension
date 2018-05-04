@@ -25,6 +25,10 @@
     </developer>
   </developers>
 
+  <!-- un-comment when execute the goal: versions:display-plugin-updates
+  <prerequisites><maven>${project.runtime-maven.min-version}</maven></prerequisites>
+  -->
+
   <scm>
     <connection>scm:git:git://github.com/gzm55/project-settings-maven-extension.git</connection>
     <developerConnection>scm:git:git@github.com:gzm55/project-settings-maven-extension.git</developerConnection>
@@ -44,10 +48,6 @@
     </snapshotRepository>
   </distributionManagement>
 
-  <!-- un-comment when execute the goal: versions:display-plugin-updates
-  <prerequisites><maven>${project.runtime-maven.min-version}</maven></prerequisites>
-  -->
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -60,8 +60,8 @@
     <project.buildtime-maven.min-version>3.5.3</project.buildtime-maven.min-version>
 
     <!-- junit 5 versions -->
-    <junit.jupiter.version>5.1.0</junit.jupiter.version>
-    <junit.platform.version>1.1.0</junit.platform.version>
+    <junit.jupiter.version>5.2.0</junit.jupiter.version>
+    <junit.platform.version>1.2.0</junit.platform.version>
 
     <maven.compiler.source>${project.runtime-jdk.min-version}</maven.compiler.source>
     <maven.compiler.target>${project.runtime-jdk.min-version}</maven.compiler.target>
@@ -112,7 +112,7 @@
       <plugins>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
@@ -132,7 +132,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
@@ -140,7 +140,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.7</version>
+          <version>3.7.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-source-plugin</artifactId>
@@ -173,8 +173,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <!-- only support 2.19.1, see https://github.com/junit-team/junit5/issues/809 -->
-        <version>2.19.1</version>
+        <version>2.21.0</version>
         <dependencies>
           <dependency>
             <groupId>org.junit.platform</groupId>
@@ -205,7 +204,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.0.2</version>
+        <version>3.1.0</version>
         <executions>
           <execution>
             <!-- workaround for https://issues.apache.org/jira/browse/MINVOKER-117 -->
