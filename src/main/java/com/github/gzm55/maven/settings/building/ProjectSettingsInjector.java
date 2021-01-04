@@ -6,6 +6,9 @@ import org.apache.maven.building.FileSource;
 import org.apache.maven.building.Source;
 import org.apache.maven.cli.MavenCli;
 import org.apache.maven.eventspy.AbstractEventSpy;
+import org.apache.maven.execution.MavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionResult;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.TrackableBase;
 import org.apache.maven.settings.building.DefaultSettingsProblem;
@@ -26,9 +29,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -56,8 +61,14 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
   private static final String PROJECT_SETTINGS_FILENAME = ".mvn/settings.xml";
   public static final String PROJECT_SETTINGS_SKIP_KEY = "skipProjectSettings";
+  private static final String IDEA_VERSION_1 = "idea.version";
+  private static final String IDEA_VERSION_2 = "idea.maven.embedder.version";
+  private static final String SKIP_IDE_INTEGRATION_KEY = "skipIdeIntegration";
 
   private List<SettingsProblem> injectingProblems;
+  private boolean inIde = false;
+  private boolean skipIdeIntegration = false;
+  private String localRepo = null;
 
   @Override
   public void onEvent(final Object event) throws SettingsBuildingException {
@@ -65,6 +76,73 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
       // Assuming the SettingsBuilding{Request,Result} events will be dispatched in paired order.
       ((SettingsBuildingResult)event).getProblems().addAll(0, injectingProblems);
       injectingProblems = null;
+      return;
+    } else if (event instanceof MavenExecutionRequest) {
+      final MavenExecutionRequest mavenExecutionRequest = (MavenExecutionRequest)event;
+      final Properties sysProps = mavenExecutionRequest.getSystemProperties();
+      inIde = sysProps.containsKey(IDEA_VERSION_1) || sysProps.containsKey(IDEA_VERSION_2);
+      skipIdeIntegration = sysProps.containsKey(skipIdeIntegration);
+      return;
+    } else if (event instanceof MavenExecutionResult
+               && inIde && !skipIdeIntegration && null != localRepo) {
+      final MavenExecutionResult mavenExecutionResult = (MavenExecutionResult)event;
+      if (mavenExecutionResult.hasExceptions()) {
+        return;
+      }
+
+      
+      logger.debug("Make IDE to identify the parent poms downloaded from custom repositories.");
+
+      for (final MavenProject p : mavenExecutionResult.getTopologicallySortedProjects()) {
+        MavenProject parent = null;
+        for (parent = p.getParent(); null != parent; parent = parent.getParent()) {
+          if (null == parent.getFile()) {
+            // parent is not a local pom file
+
+            // remove '_remote.repositories' file to mimic local installed artifact
+            final String flagFileRelPath = parent.getGroupId().replace('.', File.separatorChar)
+                                           + File.separatorChar + parent.getArtifactId()
+                                           + File.separatorChar + parent.getVersion()
+                                           + File.separatorChar + "_remote.repositories";
+            final File internalFlagFile = new File(localRepo, flagFileRelPath);
+            if (internalFlagFile.exists()) {
+              try {
+                if (internalFlagFile.delete()) {
+                  if (logger.isDebugEnabled()) {
+                    logger.debug("Remove _remote.repositories: " + internalFlagFile.getPath());
+                  }
+                } else {
+                  logger.warn("Failed to remove " + internalFlagFile.getPath());
+                }
+              } catch (final SecurityException exception) {
+                logger.warn("Unable to remove " + internalFlagFile.getPath() + ". {}", exception);
+              }
+            }
+
+            // remove '*.lastUpdated' file to clean the local cached status
+            final String statusFileRelPath = parent.getGroupId().replace('.', File.separatorChar)
+                                             + File.separatorChar + parent.getArtifactId()
+                                             + File.separatorChar + parent.getVersion()
+                                             + File.separatorChar + parent.getArtifactId()
+                                             + "-" + parent.getVersion() + ".pom.lastUpdated";
+            final File internalStatusFile = new File(localRepo, statusFileRelPath);
+            if (internalStatusFile.exists()) {
+              try {
+                if (internalStatusFile.delete()) {
+                  if (logger.isDebugEnabled()) {
+                    logger.debug("Remove _remote.repositories: " + internalStatusFile.getPath());
+                  }
+                } else {
+                  logger.warn("Failed to remove " + internalStatusFile.getPath());
+                }
+              } catch (final SecurityException exception) {
+                logger.warn("Unable to remove " + internalStatusFile.getPath() + ". {}", exception);
+              }
+            }
+          }
+        }
+      }
+
       return;
     } else if (!(event instanceof SettingsBuildingRequest)) {
       // droping all irrelevant events
@@ -140,6 +218,13 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
     // save warning problems, insert back on the SettingsBuildingResult event
     injectingProblems = problems.isEmpty() ? null : problems;
+
+    localRepo = projectSettings.getLocalRepository();
+    if (null == localRepo) {
+      localRepo = getProperty(request.getSystemProperties(), "user.home")
+                  + File.separatorChar + ".m2"
+                  + File.separatorChar + "repository";
+    }
   }
 
   private Source getSettingsSource(final File settingsFile, final Source settingsSource) {

@@ -52,7 +52,7 @@ public class ProjectSettingsMerger extends MavenSettingsMerger {
       if (serverById.containsKey(server.getId())) {
         final Server dominantServer = serverById.get(server.getId());
 
-	dominantServer.setSourceLevel(recessiveSourceLevel);
+        dominantServer.setSourceLevel(recessiveSourceLevel);
 
         // prefer user level fields for local only infos
         dominantServer.setUsername(server.getUsername());
