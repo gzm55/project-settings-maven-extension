@@ -4,6 +4,7 @@ import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.TrackableBase;
 import org.apache.maven.settings.io.SettingsReader;
+import org.apache.maven.settings.io.DefaultSettingsReader;
 
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
@@ -94,7 +95,7 @@ public class ProjectSettingsMergerTest extends PlexusJUnit5TestCase
   }
 
   Settings settingsFromString(final String settingsString) throws Exception {
-    return lookup(SettingsReader.class).read(new ByteArrayInputStream(settingsString.getBytes(StandardCharsets.UTF_8)), options);
+    return new DefaultSettingsReader().read(new ByteArrayInputStream(settingsString.getBytes(StandardCharsets.UTF_8)), options);
   }
 
   Settings merge(final String projectSettings) throws Exception {
