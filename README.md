@@ -41,9 +41,20 @@ Some fields should be controlled only by the user, not any project, so they are 
 * proxies
 * servers.server[].{username,password,privateKey,passphrase,filePermissions,directoryPermissions} - ignored and copied from user/global settings
 
+## Detect parent poms from custom repositories by IDE
+
+When specify non-central repositories via project settings from which the parent poms are downloaded,
+the IDE, e.g. Intellij, may not import the maven project cleanly, complaining that the parent poms
+cannot be got from the central repository, while the maven targets, such as clean, compile and verify
+can still be built correctly. To solve this inconvenience, from `0.2.0` this extension try to
+mimic the downloaded parent poms are install locally, by deleting some flag files in `.m2/repository`.
+That is, after importing projects, just click any maven target, e.g. `clean`.
+When the target successes, the IDE should understand the projects.
+
 ## Property switch
 
-`skipProjectSettings`, a boolean property to skip loading the project settings.
+- `skipProjectSettings`, a boolean property to skip loading the project settings.
+- `skipIdeIntegration`, a boolean property, if true, the extension will disable the feature for IDE scanning the parent poms from custom repositories.
 
 ## Known issue
 
