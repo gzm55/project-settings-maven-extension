@@ -56,6 +56,14 @@ When the target successes, the IDE should understand the projects.
 - `skipProjectSettings`, a boolean property to skip loading the project settings.
 - `skipIdeIntegration`, a boolean property, if true, the extension will disable the feature for IDE scanning the parent poms from custom repositories.
 
+## Release Flow
+
+* `mvn install`, pass all ut/it, no warnings
+* `mvn clean release:clean release:prepare`
+* `git pull`
+* `mvn clean release:clean`
+* open ci result: https://travis-ci.com/github/gzm55/project-settings-maven-extension
+
 ## Known issue
 
 Project settings can not bootstrap loading core extensions. See [MNG-6392](https://issues.apache.org/jira/browse/MNG-6392).
