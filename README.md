@@ -58,10 +58,10 @@ When the target successes, the IDE should understand the projects.
 
 ## Release Flow
 
-* `mvn install`, pass all ut/it, no warnings
-* `mvn clean release:clean release:prepare`
+* `./mvnw install`, pass all ut/it, no warnings
+* `./mvnw clean release:clean release:prepare`
 * `git pull`
-* `mvn clean release:clean`
+* `./mvnw clean release:clean`
 * open ci result: https://travis-ci.com/github/gzm55/project-settings-maven-extension
 
 ## Known issue
