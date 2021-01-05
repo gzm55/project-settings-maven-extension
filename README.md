@@ -17,7 +17,7 @@ Since Maven 3.3.1, we have another way to cooperate with maven, that is core ext
   <extension>
     <groupId>com.github.gzm55.maven</groupId>
     <artifactId>project-settings-extension</artifactId>
-    <version>0.1.1</version>
+    <version>0.2.3</version>
   </extension>
 </extensions>
 ```
@@ -46,8 +46,8 @@ Some fields should be controlled only by the user, not any project, so they are 
 When specify non-central repositories via project settings from which the parent poms are downloaded,
 the IDE, e.g. Intellij, may not import the maven project cleanly, complaining that the parent poms
 cannot be got from the central repository, while the maven targets, such as clean, compile and verify
-can still be built correctly. To solve this inconvenience, from `0.2.0` this extension try to
-mimic the downloaded parent poms are install locally, by deleting some flag files in `.m2/repository`.
+can still be built correctly. To solve this inconvenience, from `0.2.3` this extension try to
+mimic the downloaded parent poms are installed locally, by deleting some flag files in `.m2/repository`.
 That is, after importing projects, just click any maven target, e.g. `clean`.
 When the target successes, the IDE should understand the projects.
 
