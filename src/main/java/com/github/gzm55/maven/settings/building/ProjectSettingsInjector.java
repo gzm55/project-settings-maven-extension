@@ -63,6 +63,7 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   public static final String PROJECT_SETTINGS_SKIP_KEY = "skipProjectSettings";
   private static final String IDEA_VERSION_1 = "idea.version";
   private static final String IDEA_VERSION_2 = "idea.maven.embedder.version";
+  private static final String IDEA_VERSION_3 = "idea.version2020.1.1";
   private static final String SKIP_IDE_INTEGRATION_KEY = "skipIdeIntegration";
 
   private List<SettingsProblem> injectingProblems;
@@ -80,7 +81,9 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
     } else if (event instanceof MavenExecutionRequest) {
       final MavenExecutionRequest mavenExecutionRequest = (MavenExecutionRequest)event;
       final Properties sysProps = mavenExecutionRequest.getSystemProperties();
-      inIde = sysProps.containsKey(IDEA_VERSION_1) || sysProps.containsKey(IDEA_VERSION_2);
+      inIde = sysProps.containsKey(IDEA_VERSION_1)
+             || sysProps.containsKey(IDEA_VERSION_2)
+             || sysProps.containsKey(IDEA_VERSION_3);
       skipIdeIntegration = sysProps.containsKey(skipIdeIntegration);
       return;
     } else if (event instanceof MavenExecutionResult
