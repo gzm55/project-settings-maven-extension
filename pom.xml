@@ -25,10 +25,6 @@
     </developer>
   </developers>
 
-  <!-- un-comment when execute the goal: versions:display-plugin-updates
-  <prerequisites><maven>${project.runtime-maven.min-version}</maven></prerequisites>
-  -->
-
   <scm>
     <connection>scm:git:git://github.com/gzm55/project-settings-maven-extension.git</connection>
     <developerConnection>scm:git:git@github.com:gzm55/project-settings-maven-extension.git</developerConnection>
@@ -75,13 +71,13 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
-      <version>[${project.runtime-maven.min-version},)</version>
+      <version>[${project.runtime-maven.min-version},3.99)</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-embedder</artifactId>
-      <version>[${project.runtime-maven.min-version},)</version>
+      <version>[${project.runtime-maven.min-version},3.99)</version>
       <scope>provided</scope>
     </dependency>
 
@@ -94,7 +90,7 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-compat</artifactId>
-      <version>[${project.runtime-maven.min-version},)</version>
+      <version>[${project.runtime-maven.min-version},3.99)</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -111,35 +107,35 @@
       <plugins>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.2.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.10.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.0.0-M1</version>
+          <version>3.0.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-gpg-plugin</artifactId>
-          <version>1.6</version>
+          <version>3.0.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
-          <version>3.0.0-M1</version>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.3.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.4.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.9.0</version>
+          <version>4.0.0-M4</version>
         </plugin>
         <plugin>
           <artifactId>maven-source-plugin</artifactId>
@@ -150,7 +146,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M3</version>
+        <version>3.1.0</version>
         <executions>
           <execution>
             <id>enforce-versions</id>
@@ -160,7 +156,7 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>[${project.buildtime-maven.min-version},)</version>
+                  <version>[${project.buildtime-maven.min-version},3.99)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
                   <version>[${project.buildtime-jdk.min-version},)</version>
@@ -172,12 +168,15 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M4</version>
+        <version>3.0.0-M8</version>
       </plugin>
       <plugin>
         <groupId>com.github.ekryd.sortpom</groupId>
         <artifactId>sortpom-maven-plugin</artifactId>
-        <version>2.8.0</version>
+        <version>3.2.0</version>
+        <configuration>
+          <keepBlankLines>true</keepBlankLines>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -185,21 +184,18 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <keepBlankLines>true</keepBlankLines>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.3.0</version>
         <executions>
           <execution>
             <!-- workaround for https://issues.apache.org/jira/browse/MINVOKER-117 -->
             <id>filter-it-xml</id>
-            <phase>pre-integration-test</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
+            <phase>pre-integration-test</phase>
             <configuration>
               <outputDirectory>${project.build.directory}/its/remote-parent/.mvn</outputDirectory>
               <resources>
@@ -217,7 +213,14 @@
       </plugin>
       <plugin>
         <artifactId>maven-invoker-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.4.0</version>
+        <configuration>
+          <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
+          <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
+          <cloneProjectsTo>${project.build.directory}/its</cloneProjectsTo>
+          <!-- workaround MINVOKER-117, not cleanup the filtered files -->
+          <cloneClean>false</cloneClean>
+        </configuration>
         <executions>
           <execution>
             <id>integration-test</id>
@@ -227,42 +230,35 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
-          <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
-          <cloneProjectsTo>${project.build.directory}/its</cloneProjectsTo>
-          <!-- workaround MINVOKER-117, not cleanup the filtered files -->
-          <cloneClean>false</cloneClean>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
-        <version>1.2.2</version>
-        <executions>
-          <execution>
-            <id>flatten</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>flatten</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>flatten.clean</id>
-            <phase>clean</phase>
-            <goals>
-              <goal>clean</goal>
-            </goals>
-          </execution>
-        </executions>
+        <version>1.3.0</version>
         <configuration>
           <flattenMode>ossrh</flattenMode>
         </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+            <phase>prepare-package</phase>
+          </execution>
+          <execution>
+            <id>flatten.clean</id>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <phase>clean</phase>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.8</version>
+        <version>1.6.13</version>
         <extensions>true</extensions>
         <configuration>
           <serverId>ossrh</serverId>
@@ -273,7 +269,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <id>validate</id>
