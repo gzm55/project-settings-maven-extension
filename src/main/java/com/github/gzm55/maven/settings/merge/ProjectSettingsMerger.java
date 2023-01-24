@@ -1,14 +1,12 @@
 package com.github.gzm55.maven.settings.merge;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.maven.settings.Proxy;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.merge.MavenSettingsMerger;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 
 public class ProjectSettingsMerger extends MavenSettingsMerger {
 
@@ -17,8 +15,8 @@ public class ProjectSettingsMerger extends MavenSettingsMerger {
    * @param recessive a user or global level settings
    * @param recessiveSourceLevel souce level
    */
-  public void merge(final Settings dominant, final Settings recessive,
-      final String recessiveSourceLevel) {
+  public void merge(
+      final Settings dominant, final Settings recessive, final String recessiveSourceLevel) {
     if (null == dominant || null == recessive) {
       return;
     }
