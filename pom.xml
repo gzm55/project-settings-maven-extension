@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.gzm55.maven</groupId>
   <artifactId>project-settings-extension</artifactId>
-  <version>0.2.5-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
 
   <name>Extension for Loading project specific settings.xml</name>
   <description>This extension could load .mvn/settings.xml
@@ -47,23 +47,20 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <!-- support Java 7 + maven [3.3.1, ) in runtime -->
-    <project.runtime-jdk.min-version>1.7</project.runtime-jdk.min-version>
+    <!-- support Java 7 + maven [3.3.1, 4.0) in runtime -->
+    <project.runtime-jdk.min-version>7</project.runtime-jdk.min-version>
     <project.runtime-maven.min-version>3.3.1</project.runtime-maven.min-version>
 
     <!-- requirement for build this extension -->
-    <project.buildtime-jdk.min-version>1.8</project.buildtime-jdk.min-version>
+    <project.buildtime-jdk.min-version>9</project.buildtime-jdk.min-version>
     <project.buildtime-maven.min-version>3.5.3</project.buildtime-maven.min-version>
 
     <!-- junit 5 versions -->
-    <junit.jupiter.version>5.7.0</junit.jupiter.version>
+    <junit.jupiter.version>5.9.2</junit.jupiter.version>
 
-    <maven.compiler.source>${project.runtime-jdk.min-version}</maven.compiler.source>
-    <maven.compiler.target>${project.runtime-jdk.min-version}</maven.compiler.target>
-    <maven.compiler.testSource>${project.buildtime-jdk.min-version}</maven.compiler.testSource>
-    <maven.compiler.testTarget>${project.buildtime-jdk.min-version}</maven.compiler.testTarget>
-
-    <sort.verifyFail>STOP</sort.verifyFail>
+    <maven.compiler.release>${project.runtime-jdk.min-version}</maven.compiler.release>
+    <!-- use native release for testing codes -->
+    <maven.compiler.testRelease>${java.version.majorVersion}</maven.compiler.testRelease>
   </properties>
 
   <dependencies>
@@ -167,23 +164,25 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M8</version>
-      </plugin>
-      <plugin>
-        <groupId>com.github.ekryd.sortpom</groupId>
-        <artifactId>sortpom-maven-plugin</artifactId>
-        <version>3.2.0</version>
-        <configuration>
-          <keepBlankLines>true</keepBlankLines>
-        </configuration>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.3.0</version>
         <executions>
           <execution>
+            <id>parse-java-version</id>
             <goals>
-              <goal>verify</goal>
+              <goal>parse-version</goal>
             </goals>
+            <configuration>
+              <versionString>${java.version}</versionString>
+              <propertyPrefix>java.version</propertyPrefix>
+            </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M8</version>
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
@@ -269,7 +268,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>2.30.0</version>
+        <version>2.31.0</version>
         <configuration>
           <java>
             <googleJavaFormat>
@@ -278,6 +277,16 @@
               <style>GOOGLE</style>
             </googleJavaFormat>
           </java>
+          <pom>
+            <sortPom>
+              <expandEmptyElements>false</expandEmptyElements>
+              <!-- https://issues.apache.org/jira/browse/MRELEASE-1111 -->
+              <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
+            </sortPom>
+          </pom>
+          <upToDateChecking>
+            <enabled>true</enabled>
+          </upToDateChecking>
         </configuration>
         <executions>
           <execution>
