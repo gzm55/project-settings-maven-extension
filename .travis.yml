@@ -3,8 +3,8 @@ dist: trusty
 language: java
 
 jdk:
-- oraclejdk8
 - openjdk11
+- openjdk17
 
 cache:
   directories:
@@ -18,13 +18,13 @@ script:
 jobs:
   include:
   - stage: deploy
-    jdk: oraclejdk8
+    jdk: openjdk11
     if: repo = gzm55/project-settings-maven-extension AND branch = master AND type != pull_request
     before_script:
     - ./mvnw -B -q exec:exec -Dexec.executable=echo -Dexec.args='${project.version}' | grep -q -- '-SNAPSHOT$' || { echo "Skip non SNAPSHOT commits"; travis_terminate 0; }
     script: ./mvnw -B -DskipTests -Dinvoker.skip -gs .cd/settings.xml deploy
   - stage: deploy
-    jdk: oraclejdk8
+    jdk: openjdk11
     if: repo = gzm55/project-settings-maven-extension AND tag =~ ^project-settings-extension-[0-9]+(\.[0-9]+)+$
     before_script:
     - ./mvnw -B -q exec:exec -Dexec.executable=echo -Dexec.args='${project.version}' | grep -v -q -- '-SNAPSHOT$' || { echo "Skip SNAPSHOT commits"; travis_terminate 0; }
