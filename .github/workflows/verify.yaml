@@ -1,0 +1,30 @@
+name: verify a commit
+
+# trigger on push to branches and PR
+on:
+  push:
+    branch:
+  pull_request:
+
+jobs:
+  build:
+    name: 'verify with JDK ${{ matrix.jdk }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [ 11, 17 ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '${{ matrix.jdk }}'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and verify
+        run: ./mvnw verify --batch-mode --no-transfer-progress --errors

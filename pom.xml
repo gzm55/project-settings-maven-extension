@@ -284,6 +284,12 @@
               <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
             </sortPom>
           </pom>
+          <yaml>
+            <includes>
+              <include>.github/**/*.yaml</include>
+              <include>.github/**/*.yml</include>
+            </includes>
+          </yaml>
           <upToDateChecking>
             <enabled>true</enabled>
           </upToDateChecking>
