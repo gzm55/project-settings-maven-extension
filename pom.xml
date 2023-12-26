@@ -212,7 +212,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-invoker-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.6.0</version>
         <configuration>
           <localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
           <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
