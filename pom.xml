@@ -138,6 +138,10 @@
           <artifactId>maven-source-plugin</artifactId>
           <version>3.2.1</version>
         </plugin>
+        <plugin>
+          <artifactId>maven-wrapper-plugin</artifactId>
+          <version>3.2.0</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
