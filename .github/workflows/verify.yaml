@@ -4,6 +4,10 @@ name: Verify
 on:
   push:
     branch:
+    tags:
+    - 'project-settings-extension-[0-9]+'
+    - 'project-settings-extension-[0-9]+.[0-9]+'
+    - 'project-settings-extension-[0-9]+.[0-9]+.[0-9]+'
   pull_request:
 
 jobs:
@@ -17,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '${{ matrix.jdk }}'
           distribution: 'temurin'
@@ -28,3 +32,39 @@ jobs:
 
       - name: Build and verify
         run: ./mvnw verify --batch-mode --no-transfer-progress --errors
+
+  release-on-tag:
+    name: 'Publish tag ${{ github.ref_name }} to the Maven Central Repository'
+    needs: build
+    if: github.repository == 'gzm55/project-settings-maven-extension' && github.ref_protected && startsWith(github.ref, 'refs/tags/project-settings-extension-')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
+
+      - name: Dump Settings
+        run: |
+          gpg --version || :
+          gpg --list-keys || :
+          gpg2 --version || :
+          gpg2 --list-keys || :
+          ./mvnw -B help:effective-settings -X
+
+      - name: Publish package
+        run: ./mvnw -B -DskipTests -Dinvoker.skip -gs .cd/settings.xml -P release-profile deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
