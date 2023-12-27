@@ -41,6 +41,9 @@ jobs:
     # ref_protected is not set to true for protected tags now
     # ref: https://github.com/orgs/community/discussions/10906#discussioncomment-3915816
     runs-on: ubuntu-latest
+    environment:
+      name: Maven Publish
+      url: https://oss.sonatype.org/
 
     steps:
       - uses: actions/checkout@v4
