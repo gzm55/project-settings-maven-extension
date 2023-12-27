@@ -17,7 +17,7 @@ Since Maven 3.3.1, we have another way to cooperate with maven, that is core ext
   <extension>
     <groupId>com.github.gzm55.maven</groupId>
     <artifactId>project-settings-extension</artifactId>
-    <version>0.2.3</version>
+    <version>0.3.5</version>
   </extension>
 </extensions>
 ```
