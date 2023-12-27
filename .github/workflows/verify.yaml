@@ -34,19 +34,6 @@ jobs:
       - name: Build and verify
         run: ./mvnw verify --batch-mode --no-transfer-progress --errors
 
-      - name: Dump Settings
-        run: |
-          gpg --version || :
-          gpg --list-keys || :
-          gpg2 --version || :
-          gpg2 --list-keys || :
-          ./mvnw -B help:effective-settings -X || :
-          echo "github.repository ${{ github.repository }}"
-          echo "github.ref_protected ${{ github.ref_protected }}"
-          echo "github.ref ${{ github.ref }}"
-          echo "startsWith ${{ startsWith(github.ref, 'refs/tags/project-settings-extension-') }}"
-          echo "all ${{ github.repository == 'gzm55/project-settings-maven-extension' && github.ref_protected && startsWith(github.ref, 'refs/tags/project-settings-extension-') }}"
-
   release-on-tag:
     name: 'Publish tag ${{ github.ref_name }} to the Maven Central Repository'
     needs: build
@@ -69,12 +56,7 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
 
       - name: Dump Settings
-        run: |
-          gpg --version || :
-          gpg --list-keys || :
-          gpg2 --version || :
-          gpg2 --list-keys || :
-          ./mvnw -B help:effective-settings -X
+        run: ./mvnw -B help:effective-settings -X
 
       - name: Publish package
         run: ./mvnw -B -DskipTests -Dinvoker.skip -gs .cd/settings.xml -P release-profile deploy
