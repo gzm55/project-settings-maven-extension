@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.gzm55.maven</groupId>
   <artifactId>project-settings-extension</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2-SNAPSHOT</version>
 
   <name>Extension for Loading project specific settings.xml</name>
   <description>This extension could load .mvn/settings.xml
@@ -28,7 +28,7 @@
   <scm>
     <connection>scm:git:git://github.com/gzm55/project-settings-maven-extension.git</connection>
     <developerConnection>scm:git:git@github.com:gzm55/project-settings-maven-extension.git</developerConnection>
-    <tag>project-settings-extension-0.3.1</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/gzm55/project-settings-maven-extension/tree/master</url>
   </scm>
 
