@@ -37,7 +37,9 @@ jobs:
   release-on-tag:
     name: 'Publish tag ${{ github.ref_name }} to the Maven Central Repository'
     needs: build
-    if: github.repository == 'gzm55/project-settings-maven-extension' && github.ref_protected && startsWith(github.ref, 'refs/tags/project-settings-extension-')
+    if: github.repository == 'gzm55/project-settings-maven-extension' && startsWith(github.ref, 'refs/tags/project-settings-extension-')
+    # ref_protected is not set to true for protected tags now
+    # ref: https://github.com/orgs/community/discussions/10906#discussioncomment-3915816
     runs-on: ubuntu-latest
 
     steps:
