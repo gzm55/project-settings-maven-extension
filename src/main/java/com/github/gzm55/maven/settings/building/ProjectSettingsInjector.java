@@ -18,6 +18,8 @@ import org.apache.maven.eventspy.AbstractEventSpy;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.rtinfo.RuntimeInformation;
+import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.TrackableBase;
 import org.apache.maven.settings.building.DefaultSettingsProblem;
@@ -31,6 +33,7 @@ import org.apache.maven.settings.io.SettingsReader;
 import org.apache.maven.settings.io.SettingsWriter;
 import org.apache.maven.settings.validation.SettingsValidator;
 import org.codehaus.plexus.logging.Logger;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 /**
  * Spy the SettingsBuildingRequest to inject project settings. This is a fast implemention, a better
@@ -47,6 +50,8 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
 
   @Inject private SettingsValidator settingsValidator;
 
+  @Inject private RuntimeInformation rtInfo;
+
   private ProjectSettingsMerger settingsMerger = new ProjectSettingsMerger();
 
   private static final String PROJECT_SETTINGS_FILENAME = ".mvn/settings.xml";
@@ -60,9 +65,21 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
   private boolean inIde = false;
   private boolean skipIdeIntegration = false;
   private String localRepo = null;
+  private Boolean isMaven4 = null;
 
   @Override
   public void onEvent(final Object event) throws SettingsBuildingException {
+    if (null == isMaven4) {
+      isMaven4 = rtInfo.isMavenVersion("3.99"); // including maven-4 beta version
+      if (isMaven4) {
+        logger.debug(
+            "maven 4 supports project settings natively, skip extension project-settings-extension");
+      }
+    }
+    if (isMaven4) {
+      return;
+    }
+
     if (event instanceof SettingsBuildingResult && null != injectingProblems) {
       // Assuming the SettingsBuilding{Request,Result} events will be dispatched in paired order.
       ((SettingsBuildingResult) event).getProblems().addAll(0, injectingProblems);
@@ -190,6 +207,25 @@ public class ProjectSettingsInjector extends AbstractEventSpy {
     }
     final Source projectSettingsSource = getSettingsSource(projectSettingsFile, null);
     final Settings projectSettings = readSettings(projectSettingsSource, problems);
+
+    // fix server configs for maven<3.9
+    // ref: https://maven.apache.org/guides/mini/guide-resolver-transport.html
+    if (rtInfo.isMavenVersion("(,3.9)")) {
+      for (final Server server : projectSettings.getServers()) {
+        final Xpp3Dom conf = (Xpp3Dom) server.getConfiguration();
+        for (int i = conf.getChildCount() - 1; i >= 0; i--) {
+          final Xpp3Dom child = conf.getChild(i);
+          if ("connectTimeout".equals(child.getName())
+              || "requestTimeout".equals(child.getName())) {
+            conf.removeChild(i);
+            logger.debug(
+                String.format(
+                    "fix server %s config on maven<3.9, remove key %s",
+                    server.getId(), child.getName()));
+          }
+        }
+      }
+    }
 
     final Source globalSettingsSource =
         getSettingsSource(request.getGlobalSettingsFile(), request.getGlobalSettingsSource());
