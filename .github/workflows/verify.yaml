@@ -58,7 +58,10 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
 
       - name: Dump Settings
-        run: ./mvnw -B help:effective-settings -X
+        run: |
+          gpg --list-keys
+          env
+          ./mvnw -V -B help:effective-settings -gs .cd/settings.xml
 
       - name: Publish package
         run: ./mvnw -B -DskipTests -Dinvoker.skip -gs .cd/settings.xml -P release-profile deploy
