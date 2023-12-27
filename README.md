@@ -56,6 +56,34 @@ When the target successes, the IDE should understand the projects.
 - `skipProjectSettings`, a boolean property to skip loading the project settings.
 - `skipIdeIntegration`, a boolean property, if true, the extension will disable the feature for IDE scanning the parent poms from custom repositories.
 
+## Compatible server configurations for maven before and after 3.9
+
+[Maven 3.9](https://maven.apache.org/guides/mini/guide-resolver-transport.html) introduces a new
+resolver transport and new server config keys in settings.xml. When running on a maven previous
+3.9.0, the plugin removes the new incompatible keys. Then we can set server timeout for all maven
+version in a project settings.xml like this:
+
+```xml
+<server>
+  <id>server-name<id>
+  <configuration>
+    <connectTimeout>5000</connectTimeout> <!-- read by maven >= 3.9 -->
+    <httpConfiguration>
+      <all>
+        <connectionTimeout>5000</connectionTimeout> <!-- read by maven < 3.9 -->
+      </all>
+    </httpConfiguration>
+  </configuration>
+</server>
+```
+
+## Maven 4
+
+The upcoming maven-4 has [supported](https://issues.apache.org/jira/browse/MNG-5659) the project
+settings natively. To work together with all maven versions from 3.3.1 to 4.x, when running on a
+maven 4+ environment, the plugin just skips all the watching events, leave the maven to load and
+merge the project settings.
+
 ## Release Flow
 
 * `./mvnw install`, pass all ut/it, no warnings
